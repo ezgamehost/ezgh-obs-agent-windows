@@ -20,10 +20,10 @@
       </Directory></Directory>
     </StandardDirectory>
     <StandardDirectory Id="CommonAppDataFolder"><Directory Id="EZGHData" Name="EZGH"><Directory Id="DATA" Name="ObsAgent">
-      <Component Id="DataDir" Permanent="yes"><CreateFolder><PermissionEx Sddl="O:BAG:BAD:P(A;OICI;FA;;;SY)(A;OICI;FA;;;BA)(A;OICI;GRGX;;;$(var.ServiceSID))"/></CreateFolder></Component>
-      <Directory Id="CONFIG" Name="config"><Component Id="ConfigDir" Permanent="yes"><CreateFolder><PermissionEx Sddl="O:BAG:BAD:P(A;OICI;FA;;;SY)(A;OICI;FA;;;BA)(A;OICI;GRGX;;;$(var.ServiceSID))"/></CreateFolder></Component></Directory>
-      <Directory Id="SECRETS" Name="secrets"><Component Id="SecretsDir" Permanent="yes"><CreateFolder><PermissionEx Sddl="O:BAG:BAD:P(A;OICI;FA;;;SY)(A;OICI;FA;;;BA)(A;OICI;GRGX;;;$(var.ServiceSID))"/></CreateFolder></Component></Directory>
-      <Directory Id="STATE" Name="state"><Component Id="StateDir" Permanent="yes"><CreateFolder><PermissionEx Sddl="O:BAG:BAD:P(A;OICI;FA;;;SY)(A;OICI;FA;;;BA)(A;OICI;FA;;;$(var.ServiceSID))"/></CreateFolder></Component></Directory>
+      <Component Id="DataDir" Guid="8101C550-8B1F-50F0-A8D1-B347A26A8959" Permanent="yes"><CreateFolder><PermissionEx Sddl="O:BAG:BAD:P(A;OICI;FA;;;SY)(A;OICI;FA;;;BA)(A;OICI;GRGX;;;$(var.ServiceSID))"/></CreateFolder></Component>
+      <Directory Id="CONFIG" Name="config"><Component Id="ConfigDir" Guid="8754F3DF-E9E0-5FC1-AEC3-DC6C29FE1A90" Permanent="yes"><CreateFolder><PermissionEx Sddl="O:BAG:BAD:P(A;OICI;FA;;;SY)(A;OICI;FA;;;BA)(A;OICI;GRGX;;;$(var.ServiceSID))"/></CreateFolder></Component></Directory>
+      <Directory Id="SECRETS" Name="secrets"><Component Id="SecretsDir" Guid="7EB49126-B468-5D7B-BE3D-6CB3B4378F8E" Permanent="yes"><CreateFolder><PermissionEx Sddl="O:BAG:BAD:P(A;OICI;FA;;;SY)(A;OICI;FA;;;BA)(A;OICI;GRGX;;;$(var.ServiceSID))"/></CreateFolder></Component></Directory>
+      <Directory Id="STATE" Name="state"><Component Id="StateDir" Guid="314D2F8C-6D4A-5EFE-8E48-76DBC04B25B7" Permanent="yes"><CreateFolder><PermissionEx Sddl="O:BAG:BAD:P(A;OICI;FA;;;SY)(A;OICI;FA;;;BA)(A;OICI;FA;;;$(var.ServiceSID))"/></CreateFolder></Component></Directory>
     </Directory></Directory></StandardDirectory>
     <Binary Id="InstallerExe" SourceFile="$(var.Payload)\ezgh-obs-agent-windows.exe" />
     <CustomAction Id="Prepare" BinaryRef="InstallerExe" ExeCommand="install-prepare" Execute="deferred" Impersonate="no" Return="check" />
