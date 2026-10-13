@@ -19,7 +19,7 @@
 - Configuration/credential errors must not echo secrets.
 - Native calls cannot cause overlapping collections or unbounded stop.
 - Rotation and empty-channel first start cannot advance checkpoints past durable data.
-- An malformed success must not discard queued records.
+- A malformed success must not discard queued records.
 - Install/upgrade must preserve private state without broad ACLs.
 
 ### Task 1: Configuration, portable delivery and telemetry
@@ -49,10 +49,12 @@ Interfaces: app.Run(ctx,config,ready), local named-pipe status/reload, SCM servi
 
 ### Task 4: Packaging, qualification and review
 Files: installer/Product.wxs, scripts/*.ps1, .github/workflows/ci.yml, README.md, docs/validation.md.
-- [ ] Build MSI/ZIP with protected config/secrets/state, virtual service account, no automatic fresh-install start.
-- [ ] Add Windows native CI tests and disposable install/upgrade/uninstall smoke test.
-- [ ] Add signing gate, checksums and SBOM; unsigned artifacts explicitly development-only.
-- [ ] Document operation and precise validation gaps, run checks, push and inspect Windows CI.
-- [ ] Fresh reviewer, fix material findings, final status/upstream verification.
+- [x] Build MSI/ZIP with protected config/secrets/state, virtual service account, no automatic fresh-install start.
+- [x] Add Windows native CI tests and disposable install/upgrade/uninstall smoke test.
+- [x] Add signing gate, checksums and SBOM; unsigned artifacts explicitly development-only.
+- [x] Document operation and precise validation gaps, run checks, push and inspect Windows CI.
+- [x] Fresh reviewer, fix material findings, final status/upstream verification.
 
 Execution: portable/native source code implemented; local race tests, vet and Windows cross-build passed. Review findings addressed (short-file flush, unexpected HTTP 2xx, independent self metrics). Windows CI qualification is recorded in docs/validation.md.
+
+Completed: implementation `c215fea` passed CI on Ubuntu, Windows Server 2022 and Windows Server 2025, including installed-service health and MSI lifecycle. Broader production release qualification remains explicitly tracked in docs/validation.md.
