@@ -75,6 +75,11 @@ func next(h uintptr) (uintptr, error) {
 	var count uint32
 	r, _, e := evtNext.Call(h, 1, uintptr(unsafe.Pointer(&event)), 0, 0, uintptr(unsafe.Pointer(&count)))
 	if r == 0 {
+		// Windows also reports an empty result as INVALID_OPERATION. Match
+		// pywin32's EvtNext handling only when no event handle was returned.
+		if e == windows.ERROR_INVALID_OPERATION && count == 0 && event == 0 {
+			return 0, windows.ERROR_NO_MORE_ITEMS
+		}
 		return 0, winerr(e)
 	}
 	return event, nil

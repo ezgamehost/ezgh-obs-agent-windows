@@ -62,21 +62,23 @@ func TestNativeSubscriptionBookmark(t *testing.T) {
 	case <-ctx.Done():
 		t.Fatal("subscription not ready")
 	}
-	if e = log.Info(1, "EZGH native subscription fixture"); e != nil {
-		t.Fatal(e)
-	}
-	select {
-	case body := <-rows:
-		if !strings.Contains(body, "EZGH native subscription fixture") {
-			t.Fatal("missing message")
+	for i := 0; i < 2; i++ {
+		if e = log.Info(1, "EZGH native subscription fixture"); e != nil {
+			t.Fatal(e)
 		}
-	case <-ctx.Done():
-		t.Fatal("event not received")
-	}
-	select {
-	case state := <-degraded:
-		t.Fatalf("subscription degraded: %s", state)
-	case <-time.After(2 * time.Second):
+		select {
+		case body := <-rows:
+			if !strings.Contains(body, "EZGH native subscription fixture") {
+				t.Fatal("missing message")
+			}
+		case <-ctx.Done():
+			t.Fatal("event not received")
+		}
+		select {
+		case state := <-degraded:
+			t.Fatalf("subscription degraded: %s", state)
+		case <-time.After(2 * time.Second):
+		}
 	}
 	cancel()
 	select {
