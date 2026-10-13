@@ -1,0 +1,4 @@
+/dist/
+/.superpowers/
+*.exe
+*.test

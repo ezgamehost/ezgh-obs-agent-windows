@@ -1,0 +1,6 @@
+EZGH Observability Agent for Windows
+Copyright 2026 EZGH Cloud contributors.
+
+Portable telemetry, spool, and OTLP transport code adapted from
+https://github.com/ezgamehost/ezgh-obs-agent-linux (Apache-2.0).
+Windows-specific behavior is maintained independently.
