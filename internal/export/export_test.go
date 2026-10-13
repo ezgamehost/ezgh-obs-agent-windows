@@ -1,6 +1,7 @@
 package export
 
 import (
+	"compress/gzip"
 	"context"
 	logs "go.opentelemetry.io/proto/otlp/collector/logs/v1"
 	"google.golang.org/protobuf/proto"
@@ -15,7 +16,7 @@ func TestHTTPOutcomes(t *testing.T) {
 	for _, tc := range []struct {
 		status int
 		want   Kind
-	}{{200, Success}, {429, Retry}, {502, Retry}, {503, Retry}, {504, Retry}, {401, Pause}, {403, Pause}, {404, Pause}, {413, Split}, {400, Drop}, {500, Retry}, {302, Pause}} {
+	}{{200, Success}, {201, Retry}, {202, Retry}, {204, Retry}, {429, Retry}, {502, Retry}, {503, Retry}, {504, Retry}, {401, Pause}, {403, Pause}, {404, Pause}, {413, Split}, {400, Drop}, {500, Retry}, {302, Pause}} {
 		t.Run(http.StatusText(tc.status), func(t *testing.T) {
 			s := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				if r.URL.Path != "/v1/logs" || r.Header.Get("Authorization") != "Bearer test" {
@@ -93,5 +94,29 @@ func TestOversizedSuccessRetainsBatch(t *testing.T) {
 	defer s.Close()
 	if o := NewWithClient(s.URL, s.Client(), "key").Send(context.Background(), "logs", nil); o.Kind != Retry {
 		t.Fatal(o)
+	}
+}
+func TestGzipWireAndRotation(t *testing.T) {
+	var auth string
+	s := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		auth = r.Header.Get("Authorization")
+		if r.Header.Get("Content-Encoding") != "gzip" {
+			t.Error("not compressed")
+		}
+		z, e := gzip.NewReader(r.Body)
+		if e != nil {
+			t.Fatal(e)
+		}
+		defer z.Close()
+		b, e := io.ReadAll(z)
+		if e != nil || string(b) != "payload" {
+			t.Error("payload changed")
+		}
+	}))
+	defer s.Close()
+	c := NewWithClient(s.URL, s.Client(), "old")
+	c.SetCredential("new")
+	if o := c.Send(context.Background(), "logs", []byte("payload")); o.Kind != Success || auth != "Bearer new" {
+		t.Fatal(o, auth)
 	}
 }

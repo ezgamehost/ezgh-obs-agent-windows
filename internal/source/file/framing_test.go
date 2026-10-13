@@ -26,3 +26,11 @@ func TestUTF16SplitAndTruncation(t *testing.T) {
 		t.Fatal("unbounded framing")
 	}
 }
+func TestShortInitialFileDoesNotLoseLine(t *testing.T) {
+	f := NewFramer("auto")
+	lines := f.Feed([]byte("a\n"))
+	lines = append(lines, f.Flush()...)
+	if len(lines) != 1 || lines[0].Body != "a" || lines[0].Bytes != 2 {
+		t.Fatalf("lost short file: %+v", lines)
+	}
+}

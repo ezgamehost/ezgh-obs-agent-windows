@@ -10,18 +10,18 @@ import (
 	"github.com/ezgamehost/ezgh-obs-agent-windows/internal/telemetry"
 	dto "github.com/prometheus/client_model/go"
 
-	"google.golang.org/protobuf/proto"
 	"math/rand/v2"
-
-	"runtime"
 
 	"time"
 )
 
 func collectMetrics(ctx context.Context, c config.Config, id, host string, q *spool.Queue, s *diagnostics.State) error {
+	s.Set("metrics_collection", "initializing")
 	collector, e := windowsmetrics.New(c.Metrics.Collectors)
 	if e != nil {
-		return e
+		s.Set("metrics_collection", "initialization_failed")
+		<-ctx.Done()
+		return nil
 	}
 	type result struct {
 		f  []*dto.MetricFamily
@@ -33,8 +33,6 @@ func collectMetrics(ctx context.Context, c config.Config, id, host string, q *sp
 	defer t.Stop()
 	health := time.NewTicker(time.Second)
 	defer health.Stop()
-	self := time.NewTicker(60 * time.Second)
-	defer self.Stop()
 	var started time.Time
 	for {
 		select {
@@ -87,25 +85,7 @@ func collectMetrics(ctx context.Context, c config.Config, id, host string, q *sp
 					s.Set("metrics_collection", "blocked")
 				}
 			}
-		case <-self.C:
-			var mem runtime.MemStats
-			runtime.ReadMemStats(&mem)
-			s.Gauge("go_heap_bytes", float64(mem.Alloc))
-			snap := s.Snapshot()
-			var f []*dto.MetricFamily
-			for name, value := range snap.Counters {
-				f = append(f, &dto.MetricFamily{Name: proto.String("ezgh_agent_" + name + "_total"), Type: dto.MetricType_COUNTER.Enum(), Metric: []*dto.Metric{{Counter: &dto.Counter{Value: proto.Float64(float64(value))}}}})
-			}
-			for name, value := range snap.Gauges {
-				f = append(f, &dto.MetricFamily{Name: proto.String("ezgh_agent_" + name), Type: dto.MetricType_GAUGE.Enum(), Metric: []*dto.Metric{{Gauge: &dto.Gauge{Value: proto.Float64(value)}}}})
-			}
-			payloads, e := telemetry.EncodeMetrics(f, telemetry.Resource(id, host, c.Environment, "ezgh-obs-agent-windows"), time.Now(), 50000, 16<<20)
-			if e != nil {
-				return e
-			}
-			if e = q.Enqueue(payloads, nil); e != nil && !errors.Is(e, spool.ErrFull) {
-				return e
-			}
+
 		}
 	}
 }

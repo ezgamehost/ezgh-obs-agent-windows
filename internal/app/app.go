@@ -82,7 +82,7 @@ func Run(parent context.Context, c config.Config, ready func()) error {
 		state.Set("credential", "loaded")
 		return nil
 	}
-	closeControl, e := state.Serve(diagnostics.Path(c.StateDir), reload, func() error { _, e := config.ReadCredential(c.CredentialFile); return e })
+	closeControl, e := state.Serve(diagnostics.Path(c.StateDir), reload, func() error { return doctor(c, state) })
 	if e != nil {
 		return e
 	}
@@ -149,6 +149,7 @@ func Run(parent context.Context, c config.Config, ready func()) error {
 			}
 		})
 	}
+	start(func() error { return selfMetrics(ctx, c, id, host, mq, state, 60*time.Second) })
 	if c.Metrics.Enabled {
 		start(func() error { return collectMetrics(ctx, c, id, host, mq, state) })
 	}

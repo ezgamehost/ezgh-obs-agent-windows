@@ -11,6 +11,7 @@ import (
 	"github.com/ezgamehost/ezgh-obs-agent-windows/internal/telemetry"
 	"golang.org/x/sys/windows"
 	"time"
+	"unsafe"
 )
 
 func Run(ctx context.Context, c config.Channel, id, host, env string, position Position, sink Sink, status func(string), gap func()) error {
@@ -153,4 +154,16 @@ func pause(ctx context.Context) bool {
 	case <-t.C:
 		return true
 	}
+}
+func Probe(c config.Channel) error {
+	query := c.Query
+	if query == "" {
+		query = "*"
+	}
+	h, _, e := evtQuery.Call(0, uintptr(unsafe.Pointer(wide(c.Name))), uintptr(unsafe.Pointer(wide(query))), 1)
+	if h == 0 {
+		return winerr(e)
+	}
+	closeEvent(h)
+	return nil
 }

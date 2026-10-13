@@ -109,6 +109,8 @@ func (c *Client) Send(ctx context.Context, signal string, payload []byte) Outcom
 		return Outcome{Kind: Split, Reason: "size"}
 	case code >= 500:
 		return Outcome{Kind: Retry, Reason: "server"}
+	case code > 200 && code < 300:
+		return Outcome{Kind: Retry, Reason: "unexpected_success"}
 	case code != 200:
 		return Outcome{Kind: Drop, Reason: "http_rejection"}
 	}

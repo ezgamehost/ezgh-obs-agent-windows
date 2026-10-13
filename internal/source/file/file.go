@@ -171,6 +171,10 @@ func (s *Source) Poll(ctx context.Context, now time.Time) error {
 				return e
 			}
 		}
+		if t.cp.PrefixBytes == 0 && st.Size() > 0 {
+			t.cp.PrefixBytes = int(min(st.Size(), 64))
+			t.cp.Prefix = prefix(t.f, t.cp.PrefixBytes)
+		}
 		b := make([]byte, 64<<10)
 		n, e := t.f.ReadAt(b, t.read)
 		if e != nil && e != io.EOF {
@@ -186,8 +190,8 @@ func (s *Source) Poll(ctx context.Context, now time.Time) error {
 				}
 			}
 		} else if now.Sub(t.last) >= 5*time.Second {
-			if l := t.framer.Flush(); l != nil {
-				if e = s.commit(ctx, t, l); e != nil {
+			for _, l := range t.framer.Flush() {
+				if e = s.commit(ctx, t, &l); e != nil {
 					return e
 				}
 			}

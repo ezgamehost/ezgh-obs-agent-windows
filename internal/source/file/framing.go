@@ -73,6 +73,9 @@ func (f *Framer) line() Line {
 			u[i] = binary.LittleEndian.Uint16(f.raw[i*2:])
 		}
 		s = string(utf16.Decode(u))
+		if len(f.raw)%2 != 0 {
+			s += "�"
+		}
 	} else {
 		s = strings.ToValidUTF8(string(f.raw), "�")
 	}
@@ -94,22 +97,29 @@ func bound(s string) (string, bool) {
 	}
 	return strings.ToValidUTF8(s, ""), true
 }
-func (f *Framer) Flush() *Line {
+func (f *Framer) Flush() []Line {
+	var out []Line
 	if !f.initialized {
 		f.initialized = true
-		if f.encoding == "auto" {
-			f.encoding = "utf-8"
-		}
 		p := f.pending
 		f.pending = nil
-		f.Feed(p)
+		if f.encoding == "auto" {
+			f.encoding = "utf-8"
+			if len(p) >= 2 && p[0] == 255 && p[1] == 254 {
+				f.encoding = "utf-16le"
+			}
+		}
+		if len(p) >= 2 && p[0] == 255 && p[1] == 254 && f.encoding == "utf-16le" {
+			p = p[2:]
+			f.consumed += 2
+		}
+		out = append(out, f.Feed(p)...)
 	}
 	if len(f.raw)+len(f.pending) == 0 && f.consumed == 0 {
-		return nil
+		return out
 	}
 	f.raw = append(f.raw, f.pending...)
 	f.consumed += int64(len(f.pending))
 	f.pending = nil
-	v := f.line()
-	return &v
+	return append(out, f.line())
 }

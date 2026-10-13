@@ -11,3 +11,4 @@ import (
 func Run(context.Context, config.Channel, string, string, string, Position, Sink, func(string), func()) error {
 	return errors.New("Event Log requires Windows")
 }
+func Probe(config.Channel) error { return errors.New("Event Log requires Windows") }
