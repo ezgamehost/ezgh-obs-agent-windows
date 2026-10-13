@@ -3,22 +3,28 @@
 package platform
 
 import (
+	"crypto/sha1"
+	"encoding/binary"
 	"errors"
+	"fmt"
 	"golang.org/x/sys/windows"
 	"os"
 	"path/filepath"
 	"strings"
+	"unicode/utf16"
 	"unsafe"
 )
 
 const ServiceName = "ezgh-obs-agent-windows"
 
 func ServiceSID() (string, error) {
-	s, _, _, e := windows.LookupSID("", `NT SERVICE\`+ServiceName)
-	if e != nil {
-		return "", e
+	u := utf16.Encode([]rune(strings.ToUpper(ServiceName)))
+	b := make([]byte, 2*len(u))
+	for i, v := range u {
+		binary.LittleEndian.PutUint16(b[2*i:], v)
 	}
-	return s.String(), nil
+	h := sha1.Sum(b)
+	return fmt.Sprintf("S-1-5-80-%d-%d-%d-%d-%d", binary.LittleEndian.Uint32(h[0:]), binary.LittleEndian.Uint32(h[4:]), binary.LittleEndian.Uint32(h[8:]), binary.LittleEndian.Uint32(h[12:]), binary.LittleEndian.Uint32(h[16:])), nil
 }
 func NoReparse(p string) error {
 	p = filepath.Clean(p)

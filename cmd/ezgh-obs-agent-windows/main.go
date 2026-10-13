@@ -8,6 +8,7 @@ import (
 	"github.com/ezgamehost/ezgh-obs-agent-windows/internal/app"
 	"github.com/ezgamehost/ezgh-obs-agent-windows/internal/config"
 	"github.com/ezgamehost/ezgh-obs-agent-windows/internal/diagnostics"
+	"github.com/ezgamehost/ezgh-obs-agent-windows/internal/install"
 	"github.com/ezgamehost/ezgh-obs-agent-windows/internal/service"
 	"os"
 	"os/signal"
@@ -23,12 +24,9 @@ func main() {
 	}
 }
 func execute() error {
-	base := os.Getenv("ProgramData")
-	if base == "" {
-		base = `C:\ProgramData`
-	}
+	base := install.Base()
 	flags := flag.NewFlagSet("ezgh-obs-agent-windows", flag.ContinueOnError)
-	path := flags.String("config", filepath.Join(base, "EZGH", "ObsAgent", "config", "config.yaml"), "configuration path")
+	path := flags.String("config", filepath.Join(base, "config", "config.yaml"), "configuration path")
 	if e := flags.Parse(os.Args[1:]); e != nil {
 		return e
 	}
@@ -39,6 +37,10 @@ func execute() error {
 	if op == "version" {
 		fmt.Println(version)
 		return nil
+	}
+	switch op {
+	case "install-prepare", "install-rollback", "configure-install", "repair-permissions", "activate":
+		return install.Handle(op)
 	}
 	run := func(ctx context.Context, ready func()) error {
 		c, e := config.Load(*path)

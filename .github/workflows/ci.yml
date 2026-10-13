@@ -1,0 +1,38 @@
+name: CI
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-2022, windows-2025]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - run: go test -race -timeout 3m ./...
+      - run: go vet ./...
+      - if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          ./scripts/build.ps1
+          ./scripts/msi-smoke.ps1
+      - if: always() && runner.os == 'Windows'
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-development-${{ matrix.os }}
+          path: |
+            dist/*.msi
+            dist/*.zip
+            dist/*.json
+            dist/SHA256SUMS
+            dist/*.log

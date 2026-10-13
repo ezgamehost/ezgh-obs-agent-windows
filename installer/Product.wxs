@@ -1,0 +1,39 @@
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+  <Package Name="EZGH Observability Agent" Manufacturer="EZGH Cloud" Version="$(var.Version)" UpgradeCode="BC095EBB-87C7-4BBB-A65A-903F3CD939F5" Scope="perMachine" InstallerVersion="500">
+    <MajorUpgrade DowngradeErrorMessage="A newer EZGH agent is installed." Schedule="afterInstallExecute" />
+    <MediaTemplate EmbedCab="yes" />
+    <Launch Condition="VersionNT64" Message="64-bit Windows is required." />
+    <StandardDirectory Id="ProgramFiles64Folder">
+      <Directory Id="EZGHProgram" Name="EZGH"><Directory Id="INSTALLFOLDER" Name="ObsAgent">
+        <Component Id="Agent" Guid="4CF6FDAF-A66B-48ED-948D-B00C452B0046">
+          <File Id="AgentExe" Source="$(var.Payload)\ezgh-obs-agent-windows.exe" KeyPath="yes" />
+          <ServiceInstall Id="Service" Name="ezgh-obs-agent-windows" DisplayName="EZGH Observability Agent" Description="Sends Windows host telemetry to EZGH Observability" Type="ownProcess" Start="demand" ErrorControl="normal" Account="NT SERVICE\ezgh-obs-agent-windows" />
+          <ServiceControl Id="ServiceControl" Name="ezgh-obs-agent-windows" Stop="both" Remove="uninstall" Wait="yes" />
+        </Component>
+        <Component Id="Docs"><File Source="$(var.Payload)\config.example.yaml"/><File Source="$(var.Payload)\LICENSE"/><File Source="$(var.Payload)\NOTICE"/></Component>
+        <Component Id="EventSource">
+          <RegistryKey Root="HKLM" Key="SYSTEM\CurrentControlSet\Services\EventLog\Application\ezgh-obs-agent-windows">
+            <RegistryValue Name="EventMessageFile" Type="expandable" Value="[System64Folder]EventCreate.exe" KeyPath="yes" />
+            <RegistryValue Name="TypesSupported" Type="integer" Value="7" />
+          </RegistryKey>
+        </Component>
+      </Directory></Directory>
+    </StandardDirectory>
+    <StandardDirectory Id="CommonAppDataFolder"><Directory Id="EZGHData" Name="EZGH"><Directory Id="DATA" Name="ObsAgent">
+      <Component Id="DataDir" Permanent="yes"><CreateFolder><PermissionEx Sddl="O:BAG:BAD:P(A;OICI;FA;;;SY)(A;OICI;FA;;;BA)(A;OICI;GRGX;;;$(var.ServiceSID))"/></CreateFolder></Component>
+      <Directory Id="CONFIG" Name="config"><Component Id="ConfigDir" Permanent="yes"><CreateFolder><PermissionEx Sddl="O:BAG:BAD:P(A;OICI;FA;;;SY)(A;OICI;FA;;;BA)(A;OICI;GRGX;;;$(var.ServiceSID))"/></CreateFolder></Component></Directory>
+      <Directory Id="SECRETS" Name="secrets"><Component Id="SecretsDir" Permanent="yes"><CreateFolder><PermissionEx Sddl="O:BAG:BAD:P(A;OICI;FA;;;SY)(A;OICI;FA;;;BA)(A;OICI;GRGX;;;$(var.ServiceSID))"/></CreateFolder></Component></Directory>
+      <Directory Id="STATE" Name="state"><Component Id="StateDir" Permanent="yes"><CreateFolder><PermissionEx Sddl="O:BAG:BAD:P(A;OICI;FA;;;SY)(A;OICI;FA;;;BA)(A;OICI;FA;;;$(var.ServiceSID))"/></CreateFolder></Component></Directory>
+    </Directory></Directory></StandardDirectory>
+    <Binary Id="InstallerExe" SourceFile="$(var.Payload)\ezgh-obs-agent-windows.exe" />
+    <CustomAction Id="Prepare" BinaryRef="InstallerExe" ExeCommand="install-prepare" Execute="deferred" Impersonate="no" Return="check" />
+    <CustomAction Id="Rollback" BinaryRef="InstallerExe" ExeCommand="install-rollback" Execute="rollback" Impersonate="no" Return="ignore" />
+    <CustomAction Id="Configure" FileRef="AgentExe" ExeCommand="configure-install" Execute="deferred" Impersonate="no" Return="check" />
+    <InstallExecuteSequence>
+      <Custom Action="Rollback" Before="Prepare" Condition="NOT REMOVE~=&quot;ALL&quot;" />
+      <Custom Action="Prepare" Before="StopServices" Condition="NOT REMOVE~=&quot;ALL&quot;" />
+      <Custom Action="Configure" After="InstallServices" Condition="NOT REMOVE~=&quot;ALL&quot;" />
+    </InstallExecuteSequence>
+    <Feature Id="Complete" Title="Agent"><ComponentRef Id="Agent"/><ComponentRef Id="Docs"/><ComponentRef Id="EventSource"/><ComponentRef Id="DataDir"/><ComponentRef Id="ConfigDir"/><ComponentRef Id="SecretsDir"/><ComponentRef Id="StateDir"/></Feature>
+  </Package>
+</Wix>
