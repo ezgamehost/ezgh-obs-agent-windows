@@ -27,6 +27,7 @@ func TestNativeSubscriptionBookmark(t *testing.T) {
 	defer cancel()
 	ready := make(chan struct{}, 1)
 	rows := make(chan string, 10)
+	degraded := make(chan string, 16)
 	done := make(chan error, 1)
 	go func() {
 		done <- Run(ctx, config.Channel{ID: "test", Name: "Application", Query: "*[System[Provider[@Name='" + source + "']]]", StartAt: "end", Service: "test"}, "id", "host", "test", func(string) ([]byte, error) { return nil, nil }, func(_ context.Context, r []*telemetry.LogItem, m map[string][]byte) error {
@@ -40,6 +41,12 @@ func TestNativeSubscriptionBookmark(t *testing.T) {
 			}
 			return nil
 		}, func(s string) {
+			if s != "ready" {
+				select {
+				case degraded <- s:
+				default:
+				}
+			}
 			if s == "ready" {
 				select {
 				case ready <- struct{}{}:
@@ -65,6 +72,11 @@ func TestNativeSubscriptionBookmark(t *testing.T) {
 		}
 	case <-ctx.Done():
 		t.Fatal("event not received")
+	}
+	select {
+	case state := <-degraded:
+		t.Fatalf("subscription degraded: %s", state)
+	case <-time.After(2 * time.Second):
 	}
 	cancel()
 	select {

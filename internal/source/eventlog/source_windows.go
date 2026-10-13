@@ -141,7 +141,12 @@ func Run(ctx context.Context, c config.Channel, id, host, env string, position P
 				return e
 			}
 		}
-		status("retrying")
+		var errno windows.Errno
+		if errors.As(e, &errno) {
+			status("retrying:win32:" + strconv.FormatUint(uint64(errno), 10))
+		} else {
+			status("retrying:event")
+		}
 		if !pause(ctx) {
 			break
 		}
