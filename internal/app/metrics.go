@@ -57,6 +57,7 @@ func collectMetrics(ctx context.Context, c config.Config, id, host string, q *sp
 			if r.e != nil {
 				s.Add("metrics_collection_errors", 1)
 			}
+			healthy := collectorHealth(s, r.f, c.Metrics.Collectors) && r.e == nil
 			for _, f := range r.f {
 				if f.GetType() != dto.MetricType_GAUGE && f.GetType() != dto.MetricType_COUNTER && f.GetType() != dto.MetricType_UNTYPED {
 					s.Add("metrics_unsupported_families", 1)
@@ -75,7 +76,11 @@ func collectMetrics(ctx context.Context, c config.Config, id, host string, q *sp
 				for _, p := range payloads {
 					s.Add("metrics_collected", uint64(telemetry.Count("metrics", p)))
 				}
-				s.Set("metrics_collection", "ready")
+				if healthy {
+					s.Set("metrics_collection", "ready")
+				} else {
+					s.Set("metrics_collection", "degraded")
+				}
 			}
 		case <-health.C:
 			if !started.IsZero() {
@@ -88,4 +93,33 @@ func collectMetrics(ctx context.Context, c config.Config, id, host string, q *sp
 
 		}
 	}
+}
+
+// Collection errors are encoded by the upstream collectors as success gauges,
+// even when the registry itself gathers without error.
+func collectorHealth(s *diagnostics.State, families []*dto.MetricFamily, names []string) bool {
+	success := make(map[string]bool, len(names))
+	for _, family := range families {
+		if family.GetName() != "windows_exporter_collector_success" {
+			continue
+		}
+		for _, metric := range family.Metric {
+			for _, label := range metric.Label {
+				if label.GetName() == "collector" {
+					success[label.GetValue()] = metric.GetGauge().GetValue() == 1
+				}
+			}
+		}
+	}
+	healthy := true
+	for _, name := range names {
+		value := 0.0
+		if success[name] {
+			value = 1
+		} else {
+			healthy = false
+		}
+		s.Gauge("collector_success_"+name, value)
+	}
+	return healthy
 }

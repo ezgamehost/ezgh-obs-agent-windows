@@ -27,7 +27,6 @@ if($LASTEXITCODE){throw 'Status failed'}
 & $exe doctor
 if($LASTEXITCODE){throw 'Doctor failed'}
 [IO.File]::WriteAllText("$base/state/preservation-fixture",'keep')
-$idHash=(Get-FileHash "$base/state/identity.db").Hash
 ./scripts/build.ps1 -Version 0.1.1
 $new=(Resolve-Path 'dist/*0.1.1*x64*.msi').Path
 MSI "/i `"$new`"" 'upgrade'
