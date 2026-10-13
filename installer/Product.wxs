@@ -10,7 +10,7 @@
           <ServiceInstall Id="Service" Name="ezgh-obs-agent-windows" DisplayName="EZGH Observability Agent" Description="Sends Windows host telemetry to EZGH Observability" Type="ownProcess" Start="demand" ErrorControl="normal" Account="NT SERVICE\ezgh-obs-agent-windows" />
           <ServiceControl Id="ServiceControl" Name="ezgh-obs-agent-windows" Stop="both" Remove="uninstall" Wait="yes" />
         </Component>
-        <Component Id="Docs"><File Source="$(var.Payload)\config.example.yaml"/><File Source="$(var.Payload)\LICENSE"/><File Source="$(var.Payload)\NOTICE"/></Component>
+        <Component Id="Docs"><File Source="$(var.Payload)\config.example.yaml"/><File Source="$(var.Payload)\LICENSE"/><File Source="$(var.Payload)\NOTICE"/><File Source="$(var.Payload)\ThirdPartyNotices.txt"/></Component>
         <Component Id="EventSource">
           <RegistryKey Root="HKLM" Key="SYSTEM\CurrentControlSet\Services\EventLog\Application\ezgh-obs-agent-windows">
             <RegistryValue Name="EventMessageFile" Type="expandable" Value="[System64Folder]EventCreate.exe" KeyPath="yes" />

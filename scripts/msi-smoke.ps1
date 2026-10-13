@@ -8,14 +8,20 @@ function MSI([string]$ArgsText,[string]$Log){$p=Start-Process msiexec.exe -Argum
 $msi=(Resolve-Path 'dist/*0.1.0*x64*.msi').Path
 MSI "/i `"$msi`"" 'install'
 if((Get-Service $service).Status -ne 'Stopped'){throw 'Fresh installation started automatically'}
-$config=(Get-Content examples/config.yaml -Raw).Replace('https://obs-ingest.ezghcloud.com','https://127.0.0.1:1').Replace('enabled: true','enabled: false')
+$config=(Get-Content examples/config.yaml -Raw).Replace('https://obs-ingest.ezghcloud.com','https://127.0.0.1:1').Replace('interval: 30s','interval: 1s')
 [IO.File]::WriteAllText("$base/config/config.yaml",$config)
 [IO.File]::WriteAllText("$base/secrets/ingest-key",('ezgh_ik_'+('a'*43)))
 & $exe repair-permissions
 if($LASTEXITCODE){throw 'Permissions failed'}
 & $exe activate
 if($LASTEXITCODE){throw 'Activation failed'}
-Start-Sleep 3
+$ready=$false
+for($attempt=0;$attempt -lt 30;$attempt++) {
+ Start-Sleep 1
+ $raw=& $exe status
+ if($LASTEXITCODE -eq 0){$snapshot=$raw | ConvertFrom-Json;if($snapshot.status.states.metrics_collection -eq 'ready'){$ready=$true;break}}
+}
+if(-not $ready){throw 'Default collectors failed under the installed virtual service account'}
 & $exe status
 if($LASTEXITCODE){throw 'Status failed'}
 & $exe doctor

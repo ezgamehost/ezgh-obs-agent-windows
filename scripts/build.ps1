@@ -17,6 +17,19 @@ function Sign-Artifact([string]$Path) {
   if($LASTEXITCODE){throw 'Signature verification failed'}
  } elseif($RequireSignature){throw 'Production artifacts require EZGH_SIGNING_THUMBPRINT'}
 }
+# Include license texts for modules linked into the executable.
+$notices = [Collections.Generic.List[string]]::new()
+$linked = & go list -deps -f '{{if .Module}}{{.Module.Path}}|{{.Module.Version}}|{{.Module.Dir}}{{end}}' ./cmd/ezgh-obs-agent-windows
+if($LASTEXITCODE){throw 'Dependency license inventory failed'}
+foreach($row in ($linked | Where-Object {$_} | Sort-Object -Unique)) {
+ $parts=$row -split '\|',3
+ if($parts[0] -eq 'github.com/ezgamehost/ezgh-obs-agent-windows'){continue}
+ $notices.Add("Dependency: $($parts[0]) $($parts[1])")
+ $licenses=@(Get-ChildItem -LiteralPath $parts[2] -File | Where-Object {$_.Name -match '^(LICENSE|COPYING|NOTICE)(\..*)?$'})
+ if($licenses.Count -eq 0){throw "Missing dependency license: $($parts[0])"}
+ foreach($license in $licenses){$notices.Add([IO.File]::ReadAllText($license.FullName))}
+}
+$notices | Set-Content -Encoding utf8 "$payload/ThirdPartyNotices.txt"
 Sign-Artifact "$payload/ezgh-obs-agent-windows.exe"
 $tools=Join-Path $PWD 'dist/tools'
 if(-not(Test-Path "$tools/wix.exe")) { & dotnet tool install wix --version 5.0.2 --tool-path $tools; if($LASTEXITCODE){throw 'WiX install failed'} }
