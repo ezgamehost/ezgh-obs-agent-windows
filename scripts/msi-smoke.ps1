@@ -22,6 +22,15 @@ for($attempt=0;$attempt -lt 30;$attempt++) {
  if($LASTEXITCODE -eq 0){$snapshot=$raw | ConvertFrom-Json;if($snapshot.status.states.metrics_collection -eq 'ready'){$ready=$true;break}}
 }
 if(-not $ready){throw 'Default collectors failed under the installed virtual service account'}
+# Poll through idle periods as well as active delivery to catch handle/thread errors.
+for($attempt=0;$attempt -lt 5;$attempt++) {
+ Start-Sleep 1
+ $snapshot=(& $exe status | ConvertFrom-Json)
+ if($LASTEXITCODE){throw 'Status failed during source health check'}
+ foreach($channel in @('application','system')) {
+  if($snapshot.status.states."eventlog_$channel" -ne 'ready'){throw "Unhealthy Event Log subscription: $channel $($snapshot.status.states."eventlog_$channel")"}
+ }
+}
 & $exe status
 if($LASTEXITCODE){throw 'Status failed'}
 & $exe doctor

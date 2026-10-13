@@ -10,12 +10,17 @@ import (
 	"github.com/ezgamehost/ezgh-obs-agent-windows/internal/config"
 	"github.com/ezgamehost/ezgh-obs-agent-windows/internal/telemetry"
 	"golang.org/x/sys/windows"
+	"runtime"
 	"strconv"
 	"time"
 	"unsafe"
 )
 
 func Run(ctx context.Context, c config.Channel, id, host, env string, position Position, sink Sink, status func(string), gap func()) error {
+	// Event Log query/result handles have thread affinity. Keep creation,
+	// enumeration, rendering and close on one OS thread across Go waits.
+	runtime.LockOSThread()
+	defer runtime.UnlockOSThread()
 	key := SourceKey(c.ID, c.Generation)
 	query := c.Query
 	if query == "" {
@@ -164,6 +169,8 @@ func pause(ctx context.Context) bool {
 	}
 }
 func Probe(c config.Channel) error {
+	runtime.LockOSThread()
+	defer runtime.UnlockOSThread()
 	query := c.Query
 	if query == "" {
 		query = "*"
