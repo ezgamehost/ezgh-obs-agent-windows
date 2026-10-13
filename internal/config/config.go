@@ -7,7 +7,6 @@ import (
 	"go.yaml.in/yaml/v3"
 	"io"
 	"net/url"
-	"os"
 	"regexp"
 	"strings"
 	"time"
@@ -225,5 +224,3 @@ func ReadCredential(path string) (string, error) {
 	}
 	return v, nil
 }
-
-var _ = os.ErrNotExist

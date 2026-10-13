@@ -1,8 +1,8 @@
 # EZGH Windows observability agent
 
-Status: **proposed design; not implemented or release-qualified**. Written 2026-10-12.
+Status: **owner-approved design; initial implementation present, not release-qualified**. Written 2026-10-12. See [validation](validation.md).
 Product/repository name: `ezgh-obs-agent-windows`. This is the Windows counterpart
-to the [Linux agent](linux-agent.md), designed independently while Linux development
+to the [Linux agent](https://github.com/ezgamehost/service-template/blob/8921ea4/docs/observability/linux-agent.md), designed independently while Linux development
 continues. This document does not change platform contracts or authorize deployment.
 
 ## Intent and scope
@@ -387,8 +387,8 @@ The pinned console's `services/obs/src/api.ts` decodes existing API response
 envelopes. This design sends existing OTLP and proposes no response changes.
 Recheck pins before implementation/release; no production request was made.
 
-Use [identity and authorization](../../contracts/identity-and-authz.md),
-[OTLP ingest](otlp-ingest.md) and the actual backend as interface references.
+Use [identity and authorization](https://github.com/ezgamehost/service-template/blob/8921ea4/contracts/identity-and-authz.md),
+[OTLP ingest](https://github.com/ezgamehost/service-template/blob/8921ea4/docs/observability/otlp-ingest.md) and the actual backend as interface references.
 The historical ingest design and identity contract contain ingest-key cache
 provisions; they conflict with the workspace's explicit no-cache rule. This agent
 adds no authorization cache, does not depend on those provisions and does not
@@ -428,6 +428,6 @@ Before calling v1 releasable:
 
 Implementation sequence: native collector/permissions feasibility; service and
 secure configuration; durable store and OTLP fixtures; event channels; files;
-packaging and full OS qualification. This is a design handoff, not an approved
-implementation plan. The source repository, dependency pins and release artifacts
-are created in a subsequent implementation task.
+packaging and full OS qualification. Implementation and the execution plan are now in this repository.
+Optional physical_disk/service collectors remain deferred until their qualification.
+Production release still requires the gates in [validation](validation.md).

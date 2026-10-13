@@ -10,6 +10,7 @@ import (
 	"github.com/ezgamehost/ezgh-obs-agent-windows/internal/config"
 	"github.com/ezgamehost/ezgh-obs-agent-windows/internal/telemetry"
 	"golang.org/x/sys/windows"
+	"strconv"
 	"time"
 	"unsafe"
 )
@@ -113,11 +114,13 @@ func Run(ctx context.Context, c config.Channel, id, host, env string, position P
 						if ev.System.Provider.Name == "ezgh-obs-agent-windows" {
 							return save(nil, nextCP)
 						}
-						message := format(event, ev.System.Provider.Name)
+						locale := messageLocale()
+						message := format(event, ev.System.Provider.Name, locale)
 						record, e := Map(raw, message, time.Now())
 						if e != nil {
 							return e
 						}
+						record.Attributes = append(record.Attributes, telemetry.Attribute("windows.event.locale", strconv.FormatUint(uint64(locale), 16)))
 						row = &telemetry.LogItem{Resource: telemetry.Resource(id, host, env, c.Service), Record: record}
 					}
 					return save([]*telemetry.LogItem{row}, nextCP)

@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
-	"net"
 	"time"
 )
 
@@ -83,5 +82,3 @@ func Request(ctx context.Context, path, op string) (Reply, error) {
 	}
 	return r, e
 }
-
-var _ net.Conn

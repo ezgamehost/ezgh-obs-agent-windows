@@ -24,6 +24,8 @@ func selfMetrics(ctx context.Context, c config.Config, id, host string, q *spool
 
 			var mem runtime.MemStats
 			runtime.ReadMemStats(&mem)
+			diagnostics.Process(s)
+			s.Gauge("go_goroutines", float64(runtime.NumGoroutine()))
 			s.Gauge("go_heap_bytes", float64(mem.Alloc))
 			snap := s.Snapshot()
 			var f []*dto.MetricFamily

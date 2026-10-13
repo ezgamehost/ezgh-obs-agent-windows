@@ -118,6 +118,21 @@ func Run(parent context.Context, c config.Config, ready func()) error {
 			e = lq.Enqueue(payloads, cp)
 			if e == nil {
 				state.Add("logs_collected", uint64(len(rows)))
+				for _, row := range rows {
+					for _, a := range row.Record.Attributes {
+						if a.Value.GetStringValue() == "true" {
+							switch a.Key {
+							case "ezgh.log.truncated":
+								state.Add("logs_truncated", 1)
+							case "windows.event.oversized":
+								state.Add("logs_oversized", 1)
+							case "ezgh.log.invalid_utf8":
+								state.Add("logs_invalid_utf8", 1)
+							}
+						}
+					}
+				}
+				state.Set("logs_storage", "ready")
 				return nil
 			}
 			if !errors.Is(e, spool.ErrFull) {

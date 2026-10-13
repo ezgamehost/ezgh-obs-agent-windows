@@ -116,11 +116,11 @@ func subscribe(channel, query, bm string, oldest bool, signal windows.Handle) (u
 	}
 	return h, nil
 }
-func format(event uintptr, provider string) string {
+func format(event uintptr, provider string, locale uintptr) string {
 	if provider == "" {
 		return ""
 	}
-	h, _, _ := evtOpenPublisher.Call(0, uintptr(unsafe.Pointer(wide(provider))), 0, 0, 0)
+	h, _, _ := evtOpenPublisher.Call(0, uintptr(unsafe.Pointer(wide(provider))), 0, locale, 0)
 	if h == 0 {
 		return ""
 	}
@@ -139,4 +139,9 @@ func format(event uintptr, provider string) string {
 		return ""
 	}
 	return windows.UTF16ToString(b)
+}
+
+func messageLocale() uintptr {
+	v, _, _ := windows.NewLazySystemDLL("kernel32.dll").NewProc("GetUserDefaultLCID").Call()
+	return v
 }
