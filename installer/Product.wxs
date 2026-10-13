@@ -10,7 +10,10 @@
           <ServiceInstall Id="Service" Name="ezgh-obs-agent-windows" DisplayName="EZGH Observability Agent" Description="Sends Windows host telemetry to EZGH Observability" Type="ownProcess" Start="demand" ErrorControl="normal" Account="NT SERVICE\ezgh-obs-agent-windows" />
           <ServiceControl Id="ServiceControl" Name="ezgh-obs-agent-windows" Stop="both" Remove="uninstall" Wait="yes" />
         </Component>
-        <Component Id="Docs"><File Source="$(var.Payload)\config.example.yaml"/><File Source="$(var.Payload)\LICENSE"/><File Source="$(var.Payload)\NOTICE"/><File Source="$(var.Payload)\ThirdPartyNotices.txt"/></Component>
+        <Component Id="ExampleConfig"><File Source="$(var.Payload)\config.example.yaml" KeyPath="yes"/></Component>
+        <Component Id="License"><File Source="$(var.Payload)\LICENSE" KeyPath="yes"/></Component>
+        <Component Id="Notice"><File Source="$(var.Payload)\NOTICE" KeyPath="yes"/></Component>
+        <Component Id="ThirdPartyNotices"><File Source="$(var.Payload)\ThirdPartyNotices.txt" KeyPath="yes"/></Component>
         <Component Id="EventSource">
           <RegistryKey Root="HKLM" Key="SYSTEM\CurrentControlSet\Services\EventLog\Application\ezgh-obs-agent-windows">
             <RegistryValue Name="EventMessageFile" Type="expandable" Value="[System64Folder]EventCreate.exe" KeyPath="yes" />
@@ -34,6 +37,6 @@
       <Custom Action="Prepare" Before="StopServices" Condition="NOT REMOVE~=&quot;ALL&quot;" />
       <Custom Action="Configure" After="InstallServices" Condition="NOT REMOVE~=&quot;ALL&quot;" />
     </InstallExecuteSequence>
-    <Feature Id="Complete" Title="Agent"><ComponentRef Id="Agent"/><ComponentRef Id="Docs"/><ComponentRef Id="EventSource"/><ComponentRef Id="DataDir"/><ComponentRef Id="ConfigDir"/><ComponentRef Id="SecretsDir"/><ComponentRef Id="StateDir"/></Feature>
+    <Feature Id="Complete" Title="Agent"><ComponentRef Id="Agent"/><ComponentRef Id="ExampleConfig"/><ComponentRef Id="License"/><ComponentRef Id="Notice"/><ComponentRef Id="ThirdPartyNotices"/><ComponentRef Id="EventSource"/><ComponentRef Id="DataDir"/><ComponentRef Id="ConfigDir"/><ComponentRef Id="SecretsDir"/><ComponentRef Id="StateDir"/></Feature>
   </Package>
 </Wix>
