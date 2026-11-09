@@ -1,4 +1,4 @@
-param([string]$Version='0.1.0', [switch]$RequireSignature)
+param([string]$Version='0.1.1', [switch]$RequireSignature)
 $ErrorActionPreference='Stop'
 Set-Location (Split-Path $PSScriptRoot -Parent)
 $payload=Join-Path $PWD 'dist/payload'

@@ -20,12 +20,12 @@ must be qualified before claiming release support. No ARM64, Windows 10 or domai
 controller qualification is claimed.
 
 Download the MSI from the
-[v0.1.0 preview release](https://github.com/ezgamehost/ezgh-obs-agent-windows/releases/tag/v0.1.0)
+[v0.1.1 preview release](https://github.com/ezgamehost/ezgh-obs-agent-windows/releases/tag/v0.1.1)
 (unsigned) and check its SHA-256 against the release's `SHA256SUMS`. In an elevated
 PowerShell session, install it:
 
 ```powershell
-msiexec /i .\ezgh-obs-agent-windows-0.1.0-x64-unsigned-development.msi /qn
+msiexec /i .\ezgh-obs-agent-windows-0.1.1-x64-unsigned-development.msi /qn
 ```
 
 Production packages must have valid Authenticode signatures and checksums from

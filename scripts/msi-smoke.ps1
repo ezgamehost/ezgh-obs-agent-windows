@@ -5,7 +5,7 @@ $service='ezgh-obs-agent-windows'
 $base=Join-Path ([Environment]::GetFolderPath('CommonApplicationData')) 'EZGH/ObsAgent'
 $exe=Join-Path $env:ProgramFiles 'EZGH/ObsAgent/ezgh-obs-agent-windows.exe'
 function MSI([string]$ArgsText,[string]$Log){$p=Start-Process msiexec.exe -ArgumentList "$ArgsText /qn /norestart /l*v `"$PWD/dist/$Log.log`"" -Wait -PassThru;if($p.ExitCode -notin @(0,3010)){throw "MSI failed: $($p.ExitCode); see $Log.log"}}
-$msi=(Resolve-Path 'dist/*0.1.0*x64*.msi').Path
+$msi=(Resolve-Path 'dist/*0.1.1*x64*.msi').Path
 MSI "/i `"$msi`"" 'install'
 if((Get-Service $service).Status -ne 'Stopped'){throw 'Fresh installation started automatically'}
 $config=(Get-Content examples/config.yaml -Raw).Replace('https://obs-ingest.ezghcloud.com','https://127.0.0.1:1').Replace('interval: 30s','interval: 1s')
@@ -36,8 +36,8 @@ if($LASTEXITCODE){throw 'Status failed'}
 & $exe doctor
 if($LASTEXITCODE){throw 'Doctor failed'}
 [IO.File]::WriteAllText("$base/state/preservation-fixture",'keep')
-./scripts/build.ps1 -Version 0.1.1
-$new=(Resolve-Path 'dist/*0.1.1*x64*.msi').Path
+./scripts/build.ps1 -Version 0.1.2
+$new=(Resolve-Path 'dist/*0.1.2*x64*.msi').Path
 MSI "/i `"$new`"" 'upgrade'
 Start-Sleep 3
 if((Get-Service $service).Status -ne 'Running'){throw 'Upgrade failed to restore running state'}
