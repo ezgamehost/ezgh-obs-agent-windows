@@ -327,7 +327,7 @@ V1 proxy endpoints must not contain credentials.
 | Valid partial success | Acknowledge batch, count rejected items, do not replay accepted items |
 | Network failure or HTTP 429/502/503/504 | Retry with full jitter, exponential 1–60 second backoff; honor a longer valid Retry-After (seconds or date) |
 | HTTP 401/403 | Retain backlog, pause affected exports until explicit credential reload |
-| HTTP 404/405 or unsupported endpoint | Retain backlog and require configuration correction |
+| HTTP 404/405, redirect or unsupported endpoint | Retain backlog, pause affected exports until explicit credential reload, which then retries the export |
 | HTTP 413 | Transactionally replace batch with smaller batches; count/drop an indivisible refused item |
 | Permanent payload rejection such as HTTP 400 | Count lost items and acknowledge the rejected batch; record only safe reason/status |
 | Malformed/oversized success response or unexpected server failure | Retain batch, bounded backoff and visible protocol failure; no false acknowledgment |
@@ -337,7 +337,8 @@ but before local acknowledgment can duplicate data; expired source retention,
 disk failure and permanent rejection can lose it. Backend timestamps/retention
 also constrain how useful a long backlog is. Credential reload validates and
 opens the new file before swapping the in-memory secret, never writes the secret
-to queue records, and clears authentication pause only after successful reload.
+to queue records, and clears an authentication or endpoint pause only after
+successful reload.
 The remote backend remains authoritative for each request.
 
 ## Lifecycle, diagnostics and upgrades

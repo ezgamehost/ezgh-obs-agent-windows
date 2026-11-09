@@ -136,8 +136,9 @@ a crash after server acceptance but before local acknowledgment can duplicate da
 Permanent payload rejection loses the affected batch and is counted. Partial success
 is acknowledged without replaying its accepted records. HTTP 429/502/503/504 and
 network failures retry with jitter and `Retry-After`; malformed success responses
-retain the batch. HTTP 413 splits batches. Authentication or endpoint errors retain
-backlog and pause the affected exporter.
+retain the batch. HTTP 413 splits batches. Authentication or endpoint errors (HTTP
+401/403/404/405, a redirect or an invalid endpoint URL) retain backlog and pause the affected exporter until
+`reload-credential` succeeds.
 
 For same-project key rotation, atomically replace the protected secret file, retain
 its owner/DACL, then run:
